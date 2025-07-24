@@ -85,12 +85,9 @@ static void change_adc_ch(void)
 
 void uart_send(void)
 {
-    if (uart_busy)
-    {
-        return;
-    }
+    // static uint8_t counter = 0;
     // counter++;
-    points_data[0]++; // 更新帧头
+    // points_data[0] = counter; // 更新帧头
     HAL_StatusTypeDef status = HAL_UART_Transmit_DMA(&huart1, (const uint8_t *)points_data, FRAME_LEN);
     uart_busy = 1;
 }
@@ -112,7 +109,7 @@ static void change_point_idx(void)
         // HAL_GPIO_WritePin(FOR_TEST1_GPIO_Port, FOR_TEST1_Pin, GPIO_PIN_SET);
         // delay_ms(20);
         point_idx = 0;
-    }
+    }   
 }
 
 void main_task(void)
