@@ -9,6 +9,17 @@ volatile uint8_t points_data[FRAME_LEN] = {0};
 volatile uint8_t time_to_change_adc_ch = 0;
 volatile uint16_t adc_ch = 0;
 
+volatile uint8_t tx_buf[TX_BUF_LEN] = {0}; // 发送缓冲区
+
+uint8_t adc_cn_arr[16] = {0, 1, 2, 3,
+                          8, 9, 10, 11,
+                          4, 5, 6, 7,
+                          12, 13, 14, 15};
+/*{15, 1, 2, 3,
+  4, 9, 10, 11,
+  12, 5, 6, 7,
+  8, 13, 14, 0};
+*/
 void main_task_adc(void)
 {
     if (HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_dma_buffer, ADC_BUFFER_SIZE) != HAL_OK)
@@ -35,7 +46,9 @@ void adc_data_handler(void)
 {
     // 简单计算平均值
     uint32_t adc_sum = 0;
-    for (uint32_t i = 0; i < ADC_BUFFER_SIZE; i++)
+    uint32_t i = 0;
+
+    for (i = 0; i < ADC_BUFFER_SIZE; i++)
     {
         adc_sum += adc_dma_buffer[i];
     }
@@ -71,14 +84,14 @@ static void change_adc_ch(void)
         return;
     }
 
-    // 切换adc通道
-    set_adc_ch(adc_ch);
-
     adc_ch++;
-    if (adc_ch >= ADC_CHANNEL_NUMBER)
-    {
-        adc_ch = 0;
-    }
+    // 切换adc通道
+    set_adc_ch(adc_cn_arr[adc_ch]);
+
+    // if (adc_ch > ADC_CHANNEL_NUMBER)
+    // {
+    //     adc_ch = 0;
+    // }
 
     time_to_change_adc_ch = 0;
 }
@@ -101,6 +114,10 @@ static void change_point_idx(void)
     {
 
         uart_send();
+        adc_ch = 0;
+
+        set_adc_ch(adc_cn_arr[adc_ch]); // 重置ADC通道
+        // HAL_Delay(10);                  // 等待UART发送完成
 
         // points_data[0] = frame_id;
         // // HAL_UART_Transmit_DMA(&huart1, points_data, FRAME_LEN); // 发送点数据
@@ -109,7 +126,7 @@ static void change_point_idx(void)
         // HAL_GPIO_WritePin(FOR_TEST1_GPIO_Port, FOR_TEST1_Pin, GPIO_PIN_SET);
         // delay_ms(20);
         point_idx = 0;
-    }   
+    }
 }
 
 void main_task(void)
@@ -118,21 +135,23 @@ void main_task(void)
     {
         return;
     }
-    // 打开通道
+
+    // 打开GPIO输出
+    // 切换输入gpio, 这样速度最快
     set_channel_pin(input_ch, GPIO_PIN_SET);
 
     // 开启ADC
-    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_dma_buffer, ADC_BUFFER_SIZE) != HAL_OK;
+    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_dma_buffer, ADC_BUFFER_SIZE); // != HAL_OK;
 
     adc_busy = 1;
     while (adc_busy)
         ;
-    // 关闭通道
+
+    // 关闭GPIO输出
     set_channel_pin(input_ch, GPIO_PIN_RESET);
 
     adc_data_handler();
 
-    // 切换输入gpio, 这样速度最快
     change_input_ch();
 
     // 切换逻辑开关
@@ -158,4 +177,39 @@ void init_frame_tail(void)
     points_data[TOTAL_POINTS + 1] = 0x55; // 帧尾第二个字节
     points_data[TOTAL_POINTS + 2] = 0x03; // 帧尾第三个字节
     points_data[TOTAL_POINTS + 3] = 0x99; // 帧尾第四个字节
+}
+
+// 帧头0xaa 0x55 0x03 0x99
+// 序号
+// 报文类型
+// 指令
+// 执行结果
+void send_data(uint8_t frame_id)
+{
+    // 帧头
+    tx_buf[0] = 0xAA;
+    tx_buf[1] = 0x55;
+    tx_buf[2] = 0x03;
+    tx_buf[3] = 0x99;
+
+    tx_buf[4] = frame_id; // 帧序号
+
+    tx_buf[5] = CMD_TYPE_RESPONSE; // 帧类型为响应
+    tx_buf[6] = CMD_GET_DATA;      // 指令为获取数据
+
+    tx_buf[7] = CMD_RESULT_SUCCESS; // 执行结果为成功
+
+    memcpy(&tx_buf[8], points_data, TOTAL_POINTS); // 拷贝数据到发送缓冲区
+
+    // 计算校验和
+    uint8_t sum = 0;
+    for (uint16_t i = 0; i < TX_BUF_BYTES - 1; i++)
+    {
+        sum += tx_buf[i];
+    }
+
+    tx_buf[TX_BUF_BYTES - 1] = sum; // 设置校验和
+
+    HAL_StatusTypeDef status = HAL_UART_Transmit_DMA(&huart1, (const uint8_t *)tx_buf, TX_BUF_BYTES);
+    uart_busy = 1;
 }

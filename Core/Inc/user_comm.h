@@ -1,7 +1,8 @@
 #ifndef _USER_COMM_H_
 #define _USER_COMM_H_
 
-#include "app.h"
+// #include <string.h>
+
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
@@ -11,6 +12,8 @@
 #include "switch_hal.h"
 #include "stm32g4xx_hal.h"
 #include "stm32g431xx.h"
+#include "comm.h"
+#include "app.h"
 
 typedef struct
 {
@@ -26,8 +29,30 @@ typedef struct
 
 #define ADC_BUFFER_SIZE 10 // Define the size of the ADC buffer
 
-#define TOTAL_POINTS (ADC_CHANNEL_NUMBER * INPUT_CH_NUMBER) 
+#define TOTAL_POINTS (ADC_CHANNEL_NUMBER * INPUT_CH_NUMBER)
 
 #define FRAME_LEN (TOTAL_POINTS + 4)
+#define FRAME_HEAD_LEN 4
+
+// 帧头4B,报文1B,类型1B,CMD1B,结果1B,校验和1B
+#define TX_BUF_BYTES (TOTAL_POINTS + FRAME_HEAD_LEN + 5)
+
+#define TX_BUF_LEN 512
+
+#define STANDARD_PROTOCAL_LEN 64
+
+#define UART_RX_BUF_LEN STANDARD_PROTOCAL_LEN
+
+// 采集数据指令
+#define CMD_GET_DATA 0x01
+
+#define CMD_TYPE_REQUEST 0x00
+#define CMD_TYPE_RESPONSE 0x01
+#define CMD_TYPE_NOTIFICATION 0x02
+
+#define CMD_TOTAL_LEN 0x08
+
+#define CMD_RESULT_SUCCESS 0x00
+#define CMD_RESULT_FAIL 0x01
 
 #endif

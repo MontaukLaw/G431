@@ -96,8 +96,13 @@ int main(void)
     MX_I2C3_Init();
     /* USER CODE BEGIN 2 */
     HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, GPIO_PIN_RESET); // Turn on blue LED
-    
+
     init_frame_tail();
+
+    start_uart_rx();
+
+    // 切换adc通道
+    set_adc_ch(0);
 
     /* USER CODE END 2 */
 
@@ -105,12 +110,14 @@ int main(void)
     /* USER CODE BEGIN WHILE */
     while (1)
     {
+        // com_task();
+        main_task();
         // main_task_adc();
         // points_data[0]++;
         // uart_send();
         // HAL_Delay(100); // Delay to simulate processing time
         // main_task_adc();
-        main_task();
+        // main_task();
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */

@@ -9,4 +9,6 @@ void uart_send(void);
 
 void init_frame_tail(void);
 
+void send_data(uint8_t frame_id);
+
 #endif 

@@ -7,6 +7,10 @@
         "stm32g4xx_hal_adc.h": "c",
         "stm32g4xx_hal.h": "c",
         "stm32g431xx.h": "c",
-        "switch_hal.h": "c"
+        "switch_hal.h": "c",
+        "comm.h": "c",
+        "app.h": "c",
+        "adc.h": "c",
+        "main.h": "c"
     }
 }
