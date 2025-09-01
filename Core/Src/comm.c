@@ -58,7 +58,7 @@ void comm_handler(void)
     if (got_rx == CMD_TOTAL_LEN)
     {
         recv_handler(got_rx);
-			  got_rx = 0;
+        got_rx = 0;
     }
 }
 

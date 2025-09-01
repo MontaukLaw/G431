@@ -21,6 +21,7 @@
 #include "adc.h"
 #include "dma.h"
 #include "i2c.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -94,15 +95,38 @@ int main(void)
     MX_USART1_UART_Init();
     MX_USART2_UART_Init();
     MX_I2C3_Init();
+    MX_ADC2_Init();
+    MX_TIM7_Init();
     /* USER CODE BEGIN 2 */
-    HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, GPIO_PIN_RESET); // Turn on blue LED
+    // HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, GPIO_PIN_RESET); // Turn on blue LED
 
-    init_frame_tail();
+    // init_frame_tail();
+
+    fill_tx_data();
 
     start_uart_rx();
 
     // 切换adc通道
     set_adc_ch(0);
+
+    // 配置 SCL=PA8, SDA=PC11
+    // IIC_Init();
+
+    // ICM42688DelayMs(2);
+    // bsp_Icm42688Init();
+    icm42688_init();
+    // init_42688();
+
+    // icm42688_reset_quat_identity();
+    // float g_q[4] = {1.0f, 0.0f, 0.0f, 0.0f}; // 初始四元数
+    uint32_t last = HAL_GetTick();
+
+    // 打开adc2_dma
+    HAL_ADC_Start_DMA(&hadc2, (uint32_t *)bat_val_dma_buf, ADC2_DMA_BUF_LEN);
+
+    // 打开tim7
+    HAL_TIM_Base_Start_IT(&htim7);
+    uint8_t tx_buf[100];
 
     /* USER CODE END 2 */
 
@@ -110,8 +134,71 @@ int main(void)
     /* USER CODE BEGIN WHILE */
     while (1)
     {
+
+        bat_task();
+
+        led_task();
+
+        bl_task();
+
+        key_task();
+
+        gsensor_task();
+
+        // main_task();
+        main_task_adc_first();
+
+        // if (tim7_counter > 1000)
+        // {
+        //     tim7_counter = 0;
+        //     sprintf(tx_buf, "running\r\n");
+        //     HAL_UART_Transmit_DMA(&huart1, tx_buf, strlen((char *)tx_buf));
+        // }
+        // main_task_adc_first();
+
+#if 0
+        HAL_Delay(10);
+
+        icm42688_read_accel(&acc);
+        icm42688_read_gyro(&gyro);
+
+        uint32_t now = HAL_GetTick();
+        float dt = (now - last) * 0.001f; // s
+        last = now;
+
+        icm42688_pipeline_update(&acc, &gyro, dt, g_q);
+
+        char tx_buf[96];
+        int n = snprintf(tx_buf, sizeof(tx_buf),
+                         "%.4f, %.4f, %.4f, %.4f\r\n",
+                         g_q[0], g_q[1], g_q[2], g_q[3]);
+        if (n > 0)
+        {
+            HAL_UART_Transmit(&huart1, (uint8_t *)tx_buf, (uint16_t)n, 50);
+        }
+#endif
+        // uint8_t tx_buf[100];
+        // sprintf(tx_buf, "%.4f, %.4f, %.4f, %.4f\r\n", g_q[0], g_q[1], g_q[2], g_q[3]);
+        // HAL_UART_Transmit_DMA(&huart1, tx_buf, strlen((char *)tx_buf)); // 发送四元数数据
+
+        // uint8_t tx_end_buf[2] = {0x0d, 0x0a}; // 发送结束符
+        // HAL_UART_Transmit_DMA(&huart1, tx_end_buf, sizeof(tx_end_buf)); // 发送结束符
+        // icm42688_raw_to_units(&acc, &gyro, &acc_g, &gyro_dps);
+
+        // // acc_g.*, gyro_dps.* 可直接用
+        // HAL_Delay(10); // 100Hz 周期
+
+        // uint8_t tx_buf[] = {0x01, 0x02, 0x0d, 0x0a};
+        // HAL_UART_Transmit(&huart2, tx_buf, sizeof(tx_buf), 0xffff);
+        // main_task_adc_first();
+
+        // uart_send();
+        // HAL_Delay(100); // Delay to simulate processing time
         // com_task();
-        main_task();
+
+        //
+        // HAL_Delay(100);
+
         // main_task_adc();
         // points_data[0]++;
         // uart_send();
@@ -136,7 +223,7 @@ void SystemClock_Config(void)
 
     /** Configure the main internal regulator output voltage
      */
-    HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1_BOOST);
+    HAL_PWREx_ControlVoltageScaling(    PWR_REGULATOR_VOLTAGE_SCALE1_BOOST);
 
     /** Initializes the RCC Oscillators according to the specified parameters
      * in the RCC_OscInitTypeDef structure.

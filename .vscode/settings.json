@@ -11,6 +11,16 @@
         "comm.h": "c",
         "app.h": "c",
         "adc.h": "c",
-        "main.h": "c"
+        "main.h": "c",
+        "myiic.h": "c",
+        "stm32g4xx.h": "c",
+        "icm42688.h": "c",
+        "mems.h": "c",
+        "cmath": "c",
+        "string.h": "c",
+        "bat_val.h": "c",
+        "icm42688_hard_i2c.h": "c",
+        "math.h": "c",
+        "bl.h": "c"
     }
 }

@@ -63,6 +63,8 @@ void Error_Handler(void);
 #define STDBY_GPIO_Port GPIOC
 #define CHRG_Pin GPIO_PIN_15
 #define CHRG_GPIO_Port GPIOC
+#define VBAT_ADC_Pin GPIO_PIN_0
+#define VBAT_ADC_GPIO_Port GPIOA
 #define CH15_Pin GPIO_PIN_1
 #define CH15_GPIO_Port GPIOA
 #define CH14_Pin GPIO_PIN_2
@@ -97,6 +99,10 @@ void Error_Handler(void);
 #define CH0_GPIO_Port GPIOB
 #define HC4067_S1_Pin GPIO_PIN_6
 #define HC4067_S1_GPIO_Port GPIOC
+#define POWER_KEY_Pin GPIO_PIN_11
+#define POWER_KEY_GPIO_Port GPIOA
+#define POWER_CTRL_Pin GPIO_PIN_12
+#define POWER_CTRL_GPIO_Port GPIOA
 #define LED_G_Pin GPIO_PIN_15
 #define LED_G_GPIO_Port GPIOA
 #define LED_R_Pin GPIO_PIN_10
