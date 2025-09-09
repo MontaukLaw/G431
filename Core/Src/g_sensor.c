@@ -5,9 +5,10 @@ icm42688Float3_t acc_g, gyro_dps;
 
 float q_out[4] = {1.0f, 0.0f, 0.0f, 0.0f}; // 初始四元数
 
+// 10ms执行一次.
 void gsensor_task(void)
 {
-    // 10ms执行一次.
+
     static uint32_t last_run_tck = 0;
     uint32_t now = HAL_GetTick();
 
@@ -32,5 +33,4 @@ void gsensor_task(void)
     // }
 
     last_run_tck = now;
-
 }

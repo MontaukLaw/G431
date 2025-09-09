@@ -53,12 +53,12 @@ void bat_task(void)
     if (bat_adc_done == 0)
         return;
 
-    // static uint32_t last_sys_tick = 0;
-    // uint32_t now = HAL_GetTick();
-    // if (now - last_sys_tick < 1000)
-    // {
-    //     return;
-    // }
+    static uint32_t last_sys_tick = 0;
+    uint32_t now = HAL_GetTick();
+    if (now - last_sys_tick < 1000)
+    {
+        return;
+    }
 
     // last_sys_tick = now;
     uint32_t val_total = 0;
@@ -69,15 +69,15 @@ void bat_task(void)
 
     count_bat_volt((uint16_t)(val_total / ADC2_DMA_BUF_LEN));
 
-    static uint32_t print_counter = 0;
-    print_counter++;
-    if (print_counter > 1000)
-    {
-        uint8_t tx_buf[50];
-        sprintf((char *)tx_buf, "bat: %d%% %d%% \r\n", bat_smooth_percentage, bat_percentage);
-        HAL_UART_Transmit_DMA(&huart1, tx_buf, strlen((char *)tx_buf));
-        print_counter = 0;
-    }
+    // static uint32_t print_counter = 0;
+    // print_counter++;
+    // if (print_counter > 1000)
+    // {
+    //     uint8_t tx_buf[50];
+    //     sprintf((char *)tx_buf, "bat: %d%% %d%% \r\n", bat_smooth_percentage, bat_percentage);
+    //     HAL_UART_Transmit_DMA(&huart1, tx_buf, strlen((char *)tx_buf));
+    //     print_counter = 0;
+    // }
 
     bat_adc_done = 0;
 }

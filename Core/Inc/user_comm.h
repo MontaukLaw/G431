@@ -36,7 +36,8 @@ typedef struct
 } GPIO_Channel;
 
 #define RESET_GQ_KEY_SHAKE_DELAY 5
-#define PWOER_DOWN_COUNTER 600
+// 6秒关灯
+#define PWOER_DOWN_COUNTER 100 // 600
 
 #define ICM42688DelayMs(_nms) HAL_Delay(_nms)
 

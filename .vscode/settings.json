@@ -21,6 +21,7 @@
         "bat_val.h": "c",
         "icm42688_hard_i2c.h": "c",
         "math.h": "c",
-        "bl.h": "c"
+        "bl.h": "c",
+        "key.h": "c"
     }
 }

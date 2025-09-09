@@ -99,7 +99,8 @@ int main(void)
     MX_TIM7_Init();
     /* USER CODE BEGIN 2 */
     // HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, GPIO_PIN_RESET); // Turn on blue LED
-
+    HAL_Delay(300);
+    HAL_GPIO_WritePin(GPIOA, POWER_CTRL_Pin, GPIO_PIN_SET);
     // init_frame_tail();
 
     fill_tx_data();
@@ -139,14 +140,14 @@ int main(void)
 
         led_task();
 
-        bl_task();
-
         key_task();
 
         gsensor_task();
 
         // main_task();
         main_task_adc_first();
+
+        bl_task();
 
         // if (tim7_counter > 1000)
         // {
@@ -223,7 +224,7 @@ void SystemClock_Config(void)
 
     /** Configure the main internal regulator output voltage
      */
-    HAL_PWREx_ControlVoltageScaling(    PWR_REGULATOR_VOLTAGE_SCALE1_BOOST);
+    HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1_BOOST);
 
     /** Initializes the RCC Oscillators according to the specified parameters
      * in the RCC_OscInitTypeDef structure.

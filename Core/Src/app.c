@@ -53,6 +53,7 @@ uint8_t adc_cn_arr[16] = {0, 1, 2, 3,
 
 // 陀螺仪4元数
 extern float q_out[];
+extern uint8_t bl_tx_buf[];
 
 /*{15, 1, 2, 3,
   4, 9, 10, 11,
@@ -171,6 +172,9 @@ void uart_send(void)
 
     // 4元数放在最后16个字节
     memcpy(&tx_data[TOTAL_POINTS + 8], (const void *)q_out, 16);
+
+    // 将数据复制到bl的传输数组中
+    memcpy(bl_tx_buf, (const void *)tx_data, OLD_FRAME_LEN);
 
     HAL_StatusTypeDef status = HAL_UART_Transmit_DMA(&huart1, (uint8_t *)tx_data, OLD_FRAME_LEN);
 

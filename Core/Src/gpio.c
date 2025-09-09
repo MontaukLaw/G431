@@ -58,7 +58,7 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, CH15_Pin|CH14_Pin|CH13_Pin|CH12_Pin
-                          |CH11_Pin|CH10_Pin|CH9_Pin, GPIO_PIN_RESET);
+                          |CH11_Pin|CH10_Pin|CH9_Pin|POWER_CTRL_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, CH7_Pin|CH6_Pin|CH5_Pin|CH4_Pin
@@ -66,7 +66,7 @@ void MX_GPIO_Init(void)
                           |HC4067_S3_Pin|HC4067_S2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, POWER_CTRL_Pin|LED_G_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_SET);

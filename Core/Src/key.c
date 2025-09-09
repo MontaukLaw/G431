@@ -1,11 +1,26 @@
 #include "user_comm.h"
 
+void key_task_test(void)
+{
+
+    if (HAL_GPIO_ReadPin(POWER_KEY_GPIO_Port, POWER_KEY_Pin) == GPIO_PIN_RESET)
+    {
+        HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_SET);
+    }
+    else
+    {
+        HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_RESET);
+    }
+}
+
 // 10ms执行一次
 void key_task(void)
 {
     static uint32_t last_run_tck = 0;
     uint32_t now = HAL_GetTick();
-    static uint8_t key_down_counter = 0;
+    static uint16_t key_down_counter = 0;
 
     // 调节帧率
     if (now - last_run_tck < 10)
@@ -18,17 +33,23 @@ void key_task(void)
         // 6秒关机
         if (key_down_counter >= PWOER_DOWN_COUNTER)
         {
-            // 拉高PowerCtrl
-            HAL_GPIO_WritePin(POWER_CTRL_GPIO_Port, POWER_CTRL_Pin, GPIO_PIN_RESET);
+
+            // 关灯
+            HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, GPIO_PIN_SET); // Turn off blue LED
+            HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_SET);
             while (1)
             {
-                // 等待关机
+
+                // 拉高PowerCtrl
+                HAL_GPIO_WritePin(POWER_CTRL_GPIO_Port, POWER_CTRL_Pin, GPIO_PIN_RESET);
+                // 等待关机`
             }
         }
         // 大于50ms
         else if (key_down_counter >= RESET_GQ_KEY_SHAKE_DELAY) // 1s
         {
-            key_down_counter = 0;
+            // key_down_counter = 0;
 
             // 陀螺仪复位
             icm42688_pipeline_reset();
