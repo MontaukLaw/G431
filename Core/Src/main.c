@@ -122,6 +122,9 @@ int main(void)
     // float g_q[4] = {1.0f, 0.0f, 0.0f, 0.0f}; // 初始四元数
     uint32_t last = HAL_GetTick();
 
+    // HAL_ADCEx_Calibration_Start(&hadc1, ADC_CALIB_OFFSET, ADC_SINGLE_ENDED);
+    // HAL_ADCEx_Calibration_Start(&hadc2, ADC_CALIB_OFFSET, ADC_SINGLE_ENDED);
+
     // 打开adc2_dma
     HAL_ADC_Start_DMA(&hadc2, (uint32_t *)bat_val_dma_buf, ADC2_DMA_BUF_LEN);
 
@@ -129,10 +132,20 @@ int main(void)
     HAL_TIM_Base_Start_IT(&htim7);
     uint8_t tx_buf[100];
 
+    start_adc_collecting();
+
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
+
+    while (1)
+    {
+
+        // delay_us(100);
+        main_task_adc_first();
+    }
+
     while (1)
     {
 

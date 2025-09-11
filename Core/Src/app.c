@@ -317,12 +317,18 @@ void shutdown_led(void)
     }
 }
 
+void start_adc_collecting(void)
+{
+
+    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_dma_buffer, ADC_BUFFER_SIZE); // != HAL_OK;
+}
+
 void main_task_adc_first(void)
 {
-    if (uart_busy)
-    {
-        return;
-    }
+    // if (uart_busy)
+    // {
+    //     return;
+    // }
 
     // 诺亦腾的需求, 20秒后关灯.
     // shutdown_led();
@@ -343,14 +349,15 @@ void main_task_adc_first(void)
 
             set_adc_ch(adc_idx_v2[adc_idx]);
 
-            delay_us(10);
+            // delay_us(10);
 
             // 开启ADC
-            HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_dma_buffer, ADC_BUFFER_SIZE); // != HAL_OK;
+            // HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_dma_buffer, ADC_BUFFER_SIZE); // != HAL_OK;
 
-            adc_busy = 1;
-            while (adc_busy)
-                ;
+            delay_us(3);
+            // adc_busy = 1;
+            // while (adc_busy)
+            //      ;
 
             point_nmb = input_idx * ADC_CHANNEL_NUMBER + adc_idx;
             adc_data_handler_with_idx(point_nmb);

@@ -47,7 +47,7 @@ typedef struct
 
 #define ADC_CHANNEL_NUMBER 16
 
-#define ADC_BUFFER_SIZE 80 // 10 // Define the size of the ADC buffer
+#define ADC_BUFFER_SIZE 10 // 80 // 10 // Define the size of the ADC buffer
 
 #define TOTAL_POINTS (ADC_CHANNEL_NUMBER * INPUT_CH_NUMBER)
 
