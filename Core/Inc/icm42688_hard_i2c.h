@@ -13,4 +13,6 @@ bool icm42688_read_accel(icm42688RawData_t *acc);
 
 bool icm42688_read_gyro(icm42688RawData_t *gyro);
 
+icm42688RawData_t map_vec3_by_orientation(icm42688RawData_t v_new);
+
 #endif

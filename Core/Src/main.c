@@ -142,13 +142,6 @@ int main(void)
     while (1)
     {
 
-        // delay_us(100);
-        main_task_adc_first();
-    }
-
-    while (1)
-    {
-
         bat_task();
 
         led_task();

@@ -11,7 +11,7 @@ static uint8_t icm42688_iic_read_reg(uint8_t reg)
 
 static void icm42688_iic_write_reg(uint8_t reg, uint8_t value)
 {
-    
+
     // HAL_I2C_Master_Transmit(&hi2c3, ICM42688_ADDRESS << 1, &reg, 1, HAL_MAX_DELAY);
     // HAL_I2C_Master_Transmit(&hi2c3, ICM42688_ADDRESS << 1, &value, 1, HAL_MAX_DELAY);
 
@@ -332,6 +332,9 @@ void iic_get_data(icm42688RawData_t *accData, icm42688RawData_t *gyroData)
     // gyroData->z = (int16_t)(gyroData->z * gyroSensitivity);
 }
 
+// v_old.x = v_new.y;
+// v_old.y = -v_new.x;
+// v_old.z = v_new.z;
 bool icm42688_read_accel(icm42688RawData_t *acc)
 {
     uint8_t b[6];
@@ -354,6 +357,21 @@ bool icm42688_read_gyro(icm42688RawData_t *gyro)
     gyro->y = (int16_t)((b[2] << 8) | b[3]);
     gyro->z = (int16_t)((b[4] << 8) | b[5]);
     return true;
+}
+
+icm42688RawData_t map_vec3_by_orientation(icm42688RawData_t v_new)
+{
+    icm42688RawData_t v_old = {0};
+
+    // v_old.x = v_new.y;
+    // v_old.y = -v_new.x;
+    // v_old.z = v_new.z;
+
+    v_old.x = -v_new.y;
+    v_old.y = v_new.x;
+    v_old.z = v_new.z;
+
+    return v_old;
 }
 
 void icm42688_raw_to_units(const icm42688RawData_t *rawA,

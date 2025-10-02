@@ -53,6 +53,7 @@ void key_task(void)
 
             // 陀螺仪复位
             icm42688_pipeline_reset();
+            
         }
     }
     else

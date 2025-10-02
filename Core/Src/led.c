@@ -51,8 +51,19 @@ void power_led_control(void)
         // 绿灯常亮
         HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_RESET);
     }
-    else if (bat_smooth_percentage < 19)
+    else if (bat_smooth_percentage < 19 && bat_smooth_percentage > 10)
     {
+        /// 关绿灯
+        HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_SET);
+        // 红灯常亮
+        HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_RESET);
+    }
+    else if (bat_smooth_percentage < 9)
+    {
+
+        /// 关绿灯
+        HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_SET);
+
         // 低电量, 红灯闪烁
         red_blink();
     }
@@ -60,6 +71,14 @@ void power_led_control(void)
 
 void led_task(void)
 {
+    if (HAL_GPIO_ReadPin(POWER_KEY_GPIO_Port, POWER_KEY_Pin) == GPIO_PIN_RESET)
+    {
+        // 全关
+        HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, GPIO_PIN_SET); // Turn off blue LED
+        HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_SET);
+        return;
+    }
 
     power_led_control();
 }

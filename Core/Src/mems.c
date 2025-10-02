@@ -1,4 +1,5 @@
 #include "user_comm.h"
+#define M_PI 3.14159265
 
 /*================= 量程与灵敏度（按你的寄存器配置改） =================*/
 // 加速度计灵敏度（LSB/g）: ±2g=16384, ±4g=8192, ±8g=4096, ±16g=2048
@@ -138,7 +139,7 @@ static void madgwick_update_imu(float gx_dps, float gy_dps, float gz_dps,
     const float DEG2RAD = 0.017453292519943295f;
     float gx = gx_dps * DEG2RAD;
     float gy = gy_dps * DEG2RAD;
-    float gz = gz_dps * DEG2RAD;	
+    float gz = gz_dps * DEG2RAD;
 
     // 陀螺项
     float qDot0 = 0.5f * (-q1 * gx - q2 * gy - q3 * gz);
@@ -204,6 +205,127 @@ static void madgwick_update_imu(float gx_dps, float gy_dps, float gz_dps,
     g_q.q3 = q3;
 }
 
+
+// ------- 可调参数 -------
+static const float G_NORM = 1.0f;              // 你的 convert_raw_to_units 已输出为 g
+static const float ACC_DEV_THR = 0.05f;        // 静止判定：|norm(acc)-1g| < 0.05g
+static const float GYR_NORM_THR = 2.0f;        // 静止判定：|gyro| < 2 dps
+static const float BIAS_LEARN_RATE = 0.2f;     // 静止时 z 轴零偏学习强度 [1/s]
+static const float BIAS_LEARN_RATE_XY = 0.05f; // 静止时 x/y 也可缓慢学习
+static const float STARTUP_CAL_TIME = 3.0f;    // 上电静置标定窗口（秒）
+
+// ------- 运行时状态 -------
+static vec3f_t g_gyro_bias_dps = {0}; // 陀螺零偏（dps）
+static float g_run_time = 0.0f;
+static int g_startup_cal_done = 0;
+
+// （可选）静止期偏航保持
+static int g_yaw_hold_enabled = 1;
+static float g_hold_yaw_rad = 0.0f;  // 记录一个“可信 yaw”
+static float g_yaw_hold_gain = 0.5f; // 静止时把当前 yaw 以 0.5 [1/s] 拉回
+
+static inline float vec_norm(vec3f_t v) { return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z); }
+
+static int is_stationary(const vec3f_t *acc_g, const vec3f_t *gyr_dps)
+{
+    float acc_dev = fabsf(vec_norm(*acc_g) - G_NORM);
+    float gyr_mag = vec_norm(*gyr_dps);
+    return (acc_dev < ACC_DEV_THR) && (gyr_mag < GYR_NORM_THR);
+}
+
+// 欧拉提取/替换（Z-Y-X，适合只替换 yaw）
+static void quat_to_euler_zyx(float q[4], float *roll, float *pitch, float *yaw)
+{
+    // q = [w,x,y,z]
+    float w = q[0], x = q[1], y = q[2], z = q[3];
+    // roll (x)
+    float sinr_cosp = 2.f * (w * x + y * z);
+    float cosr_cosp = 1.f - 2.f * (x * x + y * y);
+    *roll = atan2f(sinr_cosp, cosr_cosp);
+    // pitch (y)
+    float sinp = 2.f * (w * y - z * x);
+    *pitch = (fabsf(sinp) >= 1.f) ? copysignf(M_PI / 2.f, sinp) : asinf(sinp);
+    // yaw (z)
+    float siny_cosp = 2.f * (w * z + x * y);
+    float cosy_cosp = 1.f - 2.f * (y * y + z * z);
+    *yaw = atan2f(siny_cosp, cosy_cosp);
+}
+
+static void euler_zyx_to_quat(float roll, float pitch, float yaw, float q[4])
+{
+    float cr = cosf(roll * 0.5f), sr = sinf(roll * 0.5f);
+    float cp = cosf(pitch * 0.5f), sp = sinf(pitch * 0.5f);
+    float cy = cosf(yaw * 0.5f), sy = sinf(yaw * 0.5f);
+    q[0] = cy * cp * cr + sy * sp * sr; // w
+    q[1] = cy * cp * sr - sy * sp * cr; // x
+    q[2] = cy * sp * cr + sy * cp * sr; // y
+    q[3] = sy * cp * cr - cy * sp * sr; // z
+}
+
+static void startup_bias_calib(const vec3f_t *gyro_dps, float dt)
+{
+    static vec3f_t sum = {0};
+    static float t = 0.f;
+
+    if (g_startup_cal_done)
+        return;
+
+    sum.x += gyro_dps->x * dt;
+    sum.y += gyro_dps->y * dt;
+    sum.z += gyro_dps->z * dt;
+    t += dt;
+
+    if (t >= STARTUP_CAL_TIME)
+    {
+        g_gyro_bias_dps.x = sum.x / t;
+        g_gyro_bias_dps.y = sum.y / t;
+        g_gyro_bias_dps.z = sum.z / t;
+        g_startup_cal_done = 1;
+    }
+}
+
+static void online_bias_learn(const vec3f_t *gyro_dps, int stationary, float dt)
+{
+    if (!stationary)
+        return;
+
+    // 目标：静止时角速度应为 0 → 把 bias 往当前读数“回拉”
+    g_gyro_bias_dps.z += BIAS_LEARN_RATE * (gyro_dps->z - g_gyro_bias_dps.z) * dt;
+
+    // 也可以给 x/y 极低速学习，抑制温飘/累积误差
+    g_gyro_bias_dps.x += BIAS_LEARN_RATE_XY * (gyro_dps->x - g_gyro_bias_dps.x) * dt;
+    g_gyro_bias_dps.y += BIAS_LEARN_RATE_XY * (gyro_dps->y - g_gyro_bias_dps.y) * dt;
+}
+
+static void yaw_hold_when_stationary(float q[4], int stationary, float dt)
+{
+    if (!g_yaw_hold_enabled)
+        return;
+
+    float r, p, y;
+    quat_to_euler_zyx(q, &r, &p, &y);
+
+    if (stationary)
+    {
+        // 缓慢把当前 yaw 拉向 g_hold_yaw_rad
+        float dy = g_hold_yaw_rad - y;
+
+        // 把误差 wrap 到 (-pi, pi)
+        while (dy > M_PI)
+            dy -= 2.f * M_PI;
+        while (dy < -M_PI)
+            dy += 2.f * M_PI;
+
+        float y_corr = y + g_yaw_hold_gain * dy * dt;
+        euler_zyx_to_quat(r, p, y_corr, q);
+    }
+    else
+    {
+        // 运动时更新“可信 yaw”为当前 yaw（或你也可低通）
+        g_hold_yaw_rad = y;
+    }
+}
+
 /* ========= 步骤5：对外总入口（你只需要调用这个） =========
    输入原始计数 rawA/rawG、dt(s)，输出四元数 q_out[4] */
 void icm42688_pipeline_update(const icm42688RawData_t *rawA,
@@ -214,8 +336,27 @@ void icm42688_pipeline_update(const icm42688RawData_t *rawA,
     vec3f_t acc_g, gyro_dps;
     convert_raw_to_units(rawA, rawG, &acc_g, &gyro_dps);
 
+    // NEW: 启动静置标定（前3秒）
+    if (dt <= 0.f || dt > 0.5f)
+        dt = 0.01f;
+
+    g_run_time += dt;
+    if (!g_startup_cal_done && g_run_time <= STARTUP_CAL_TIME + 0.5f)
+    {
+        startup_bias_calib(&gyro_dps, dt);
+    }
+
     // 2) 低通
     lowpass_acc_gyro(&acc_g, &gyro_dps);
+
+    // NEW: 在线零偏学习（静止时）
+    int stationary = is_stationary(&acc_g, &gyro_dps);
+    online_bias_learn(&gyro_dps, stationary, dt);
+
+    // NEW: 应用零偏（一定要在送入滤波/融合前减去）
+    gyro_dps.x -= g_gyro_bias_dps.x;
+    gyro_dps.y -= g_gyro_bias_dps.y;
+    gyro_dps.z -= g_gyro_bias_dps.z;
 
     // 3) 加计检查+归一化
     float axn = 0, ayn = 0, azn = 0;
@@ -232,13 +373,17 @@ void icm42688_pipeline_update(const icm42688RawData_t *rawA,
     q_out[1] = g_q.q1; // x
     q_out[2] = g_q.q2; // y
     q_out[3] = g_q.q3; // z
+
+    // NEW: （可选）静止时偏航保持，抑制残余慢漂
+    yaw_hold_when_stationary(q_out, stationary, dt);
 }
 
 /* 可选：复位姿态与滤波器 */
 void icm42688_pipeline_reset(void)
 {
-    g_q.q0 = 1.0f; g_q.q1 = g_q.q2 = g_q.q3 = 0.0f;
-    s_lpf_inited = false;  // 下次会用首帧初始化 LPF
+    g_q.q0 = 1.0f;
+    g_q.q1 = g_q.q2 = g_q.q3 = 0.0f;
+    s_lpf_inited = false; // 下次会用首帧初始化 LPF
 }
 
 // static inline void normalize3(float *x, float *y, float *z)
@@ -252,7 +397,6 @@ void icm42688_pipeline_reset(void)
 //         *z *= inv;
 //     }
 // }
-
 
 // /*================= Madgwick IMU-only 更新 =================*/
 // static void madgwick_update_imu(float gx, float gy, float gz,

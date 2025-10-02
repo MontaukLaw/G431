@@ -12,8 +12,7 @@ void bl_task(void)
         return;
 
     // HAL_UART_Transmit_DMA(&huart2, (uint8_t *)bl_tx_buf, OLD_FRAME_LEN);
-		HAL_UART_Transmit(&huart2, (uint8_t *)bl_tx_buf, OLD_FRAME_LEN,0xffff);
+    HAL_UART_Transmit(&huart2, (uint8_t *)bl_tx_buf, OLD_FRAME_LEN, 0xffff);
 
     last_send_tick = HAL_GetTick();
-		
 }

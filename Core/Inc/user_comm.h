@@ -28,6 +28,7 @@
 #include "bl.h"
 #include "g.sensor.h"
 #include "key.h"
+#include "charge_state.h"
 
 typedef struct
 {

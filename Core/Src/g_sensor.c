@@ -2,6 +2,7 @@
 
 icm42688RawData_t acc, gyro;
 icm42688Float3_t acc_g, gyro_dps;
+icm42688RawData_t acc_mapped, gyro_mapped;
 
 float q_out[4] = {1.0f, 0.0f, 0.0f, 0.0f}; // 初始四元数
 
@@ -19,9 +20,13 @@ void gsensor_task(void)
     icm42688_read_accel(&acc);
     icm42688_read_gyro(&gyro);
 
+    acc_mapped = map_vec3_by_orientation(acc);
+    gyro_mapped = map_vec3_by_orientation(gyro);
+
     float dt = (now - last_run_tck) * 0.001f; // s
 
-    icm42688_pipeline_update(&acc, &gyro, dt, q_out);
+    // icm42688_pipeline_update(&acc, &gyro, dt, q_out);
+    icm42688_pipeline_update(&acc_mapped, &gyro_mapped, dt, q_out);
 
     // char tx_buf[96];
     // int n = snprintf(tx_buf, sizeof(tx_buf),
