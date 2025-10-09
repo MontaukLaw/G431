@@ -3,5 +3,7 @@
 
 void led_task(void);
 
+void all_led_off(void);
+
 #endif /* _LED_H_ */
 

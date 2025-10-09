@@ -1,7 +1,11 @@
 #include "user_comm.h"
 
 uint8_t uart1_rx_buf[STANDARD_PROTOCAL_LEN];
+uint8_t uart2_rx_buf[STANDARD_PROTOCAL_LEN];
+
 static uint8_t got_rx = 0;
+uint8_t got_rx_u2 = 0;
+
 
 // protocal
 // 帧头4字节 0xaa 0x55 0x03 0x99
@@ -15,6 +19,11 @@ void start_uart_rx(void)
     __HAL_UART_CLEAR_IDLEFLAG(&huart1);
 
     HAL_UART_Receive_DMA(&huart1, uart1_rx_buf, UART_RX_BUF_LEN);
+
+    __HAL_UART_ENABLE_IT(&huart2, UART_IT_IDLE);
+    __HAL_UART_CLEAR_IDLEFLAG(&huart2);
+
+    HAL_UART_Receive_DMA(&huart2, uart2_rx_buf, UART_RX_BUF_LEN);
 }
 
 // 0xaa 0x55 0x03 0x99
@@ -84,6 +93,31 @@ void uart1_it_handler(void)
         // HAL_UART_DMAStop(&huart1);
         // 重新开启接收
         HAL_UART_Receive_DMA(&huart1, uart1_rx_buf, UART_RX_BUF_LEN);
+    }
+}
+
+void uart2_it_handler(void)
+{
+    if (__HAL_UART_GET_FLAG(&huart2, UART_FLAG_IDLE) != RESET)
+    {
+        // 清除 IDLE 标志
+        __HAL_UART_CLEAR_IDLEFLAG(&huart2);
+
+        // 此时说明可能一帧数据接收完了
+        // 获取当前 DMA 计数器剩余量, 计算本次接收字节数
+        uint16_t remain = __HAL_DMA_GET_COUNTER(huart2.hdmarx);
+        if (remain)
+        {
+            uint16_t data_len = UART_RX_BUF_LEN - remain;
+            got_rx_u2 = data_len;
+        }
+
+        // 处理完毕后，可以选择清零或记录这段数据
+        // 然后继续保持 DMA 接收，让它随时准备接收新的数据
+        HAL_UART_AbortReceive(&huart2);
+        // HAL_UART_DMAStop(&huart1);
+        // 重新开启接收
+        HAL_UART_Receive_DMA(&huart2, uart2_rx_buf, UART_RX_BUF_LEN);
     }
 }
 

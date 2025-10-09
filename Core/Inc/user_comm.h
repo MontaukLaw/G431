@@ -15,7 +15,6 @@
 #include "comm.h"
 #include "app.h"
 #include <stdint.h>
-
 #include <math.h>
 #include <string.h>
 // #include "myiic.h"
@@ -35,6 +34,10 @@ typedef struct
     GPIO_TypeDef *port;
     uint16_t pin;
 } GPIO_Channel;
+
+#define CHARGING_FINISHED 1
+#define CHARGING_ONGOING 2
+#define CHARGING_NO_POWER 0
 
 #define RESET_GQ_KEY_SHAKE_DELAY 5
 // 6秒关灯

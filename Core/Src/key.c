@@ -1,5 +1,7 @@
 #include "user_comm.h"
 
+uint8_t imu_reseted = 0;
+
 void key_task_test(void)
 {
 
@@ -53,6 +55,8 @@ void key_task(void)
 
             // 陀螺仪复位
             icm42688_pipeline_reset();
+
+            imu_reseted = 1;
             
         }
     }

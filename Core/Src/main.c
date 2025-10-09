@@ -150,10 +150,17 @@ int main(void)
 
         gsensor_task();
 
-        // main_task();
         main_task_adc_first();
 
         bl_task();
+
+        u2_task();
+
+        charge_state_task();
+
+        imu_rest_cmd_task();
+
+#if 0
 
         // if (tim7_counter > 1000)
         // {
@@ -162,8 +169,6 @@ int main(void)
         //     HAL_UART_Transmit_DMA(&huart1, tx_buf, strlen((char *)tx_buf));
         // }
         // main_task_adc_first();
-
-#if 0
         HAL_Delay(10);
 
         icm42688_read_accel(&acc);

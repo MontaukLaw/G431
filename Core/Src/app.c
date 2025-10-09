@@ -8,8 +8,12 @@ volatile uint16_t point_idx = 0;
 volatile uint8_t points_data[FRAME_LEN] = {0};
 
 volatile uint8_t tx_data[OLD_FRAME_LEN] = {0};
+volatile uint8_t imu_rest_tx_data[5] = {0x03, 0xAA, 0x55, 0x03, 0x99};
 volatile uint8_t time_to_change_adc_ch = 0;
 volatile uint16_t adc_ch = 0;
+
+volatile uint8_t check_reset_imu = 0;
+volatile uint8_t bl_uart_tx_done = 0;
 
 __IO uint8_t bat_adc_done = 0;
 __IO static uint32_t fac_us = 0;
@@ -242,6 +246,13 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
     if (huart->Instance == USART1)
     {
         uart_busy = 0; // UART发送完成
+
+        check_reset_imu = 1;
+    }
+    else if (huart->Instance == USART2)
+    {
+        // 蓝牙发送完成
+        bl_uart_tx_done = 1;
     }
 }
 
@@ -321,6 +332,36 @@ void start_adc_collecting(void)
 {
 
     HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_dma_buffer, ADC_BUFFER_SIZE); // != HAL_OK;
+}
+
+void imu_rest_cmd_task(void)
+{
+    static uint8_t imu_reseted_sent = 0;
+    if (check_reset_imu)
+    {
+        if (imu_reseted && imu_reseted_sent == 0)
+        {
+
+            HAL_UART_Transmit_DMA(&huart1, (uint8_t *)imu_rest_tx_data, sizeof(imu_rest_tx_data));
+            imu_reseted_sent = 1;
+        }
+
+        check_reset_imu = 0;
+    }
+
+    if (bl_uart_tx_done)
+    {
+        if (imu_reseted && imu_reseted_sent)
+        {
+
+            HAL_UART_Transmit_DMA(&huart2, (uint8_t *)imu_rest_tx_data, sizeof(imu_rest_tx_data));
+            
+            imu_reseted_sent = 0;
+            imu_reseted = 0;
+        }
+        
+        bl_uart_tx_done = 0;
+    }
 }
 
 void main_task_adc_first(void)
@@ -420,4 +461,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 uint8_t ema_u8(uint8_t new_data, uint8_t last_data, uint8_t a_num, uint8_t a_den)
 {
     return (uint8_t)((a_num * new_data + (a_den - a_num) * last_data) / a_den);
+}
+
+uint16_t ema_u16(uint16_t new_data, uint16_t last_data, uint16_t a_num, uint16_t a_den)
+{
+    return (uint16_t)((a_num * new_data + (a_den - a_num) * last_data) / a_den);
 }

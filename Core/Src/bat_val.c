@@ -3,6 +3,7 @@
 uint16_t bat_val_dma_buf[ADC2_DMA_BUF_LEN] = {0};
 uint8_t bat_percentage;
 uint8_t bat_smooth_percentage = 100;
+uint16_t bat_smooth_mvolts = 4200;
 
 // 针对4.2伏特锂电池的点亮百分比算法.
 // 3720-3645 = 75 75/26 = 2.88
@@ -41,10 +42,13 @@ static uint8_t count_bat_volt(uint16_t adc_val)
     float vbat = ((float)adc_val / 4095.0f) * 6.6f;
     uint16_t vbat_mvolts = (uint16_t)(vbat * 1000); // 转换为毫伏
 
-    bat_percentage = bat_mini_volt_to_percentage(vbat_mvolts);
+    // bat_percentage = bat_mini_volt_to_percentage(vbat_mvolts);
 
     // 平滑处理
-    bat_smooth_percentage = ema_u8(bat_percentage, bat_smooth_percentage, 5, 10);
+    // bat_smooth_percentage = ema_u8(bat_percentage, bat_smooth_percentage, 5, 10);
+
+    bat_smooth_mvolts = ema_u16(vbat_mvolts, bat_smooth_mvolts, 5, 10);
+
 }
 
 void bat_task(void)

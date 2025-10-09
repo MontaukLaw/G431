@@ -3,4 +3,6 @@
 
 void key_task(void);
 
+extern uint8_t imu_reseted;
+
 #endif

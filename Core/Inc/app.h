@@ -24,6 +24,12 @@ uint8_t ema_u8(uint8_t new_data, uint8_t last_data, uint8_t a_num, uint8_t a_den
 
 void start_adc_collecting(void);
 
+uint16_t ema_u16(uint16_t new_data, uint16_t last_data, uint16_t a_num, uint16_t a_den);
+
+void imu_rest_cmd_task(void);
+
+extern uint16_t bat_smooth_mvolts;
+
 extern __IO uint32_t tim7_counter;
 extern __IO uint8_t bat_adc_done;
 

@@ -24,6 +24,9 @@
         "bl.h": "c",
         "key.h": "c",
         "g.sensor.h": "c",
-        "charge_state.h": "c"
+        "charge_state.h": "c",
+        "usart.h": "c",
+        "i2c.h": "c",
+        "gpio.h": "c"
     }
 }
