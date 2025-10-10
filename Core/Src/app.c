@@ -96,12 +96,12 @@ void adc_data_handler_with_idx(uint8_t point_nmb)
     uint32_t adc_sum = 0;
     uint32_t i = 0;
 
-    for (i = 0; i < ADC_BUFFER_SIZE; i++)
+    for (i = 4; i < 7; i++)
     {
         adc_sum += adc_dma_buffer[i];
     }
     // tx_buf[0] = adc_sum / ADC_BUFFER_SIZE; // 计算平均值
-    float result = adc_sum / (ADC_BUFFER_SIZE - 0);
+    float result = adc_sum / 4;      // / (ADC_BUFFER_SIZE - 0);
     points_data[point_nmb] = result; // 将结果存储到points_data中
 }
 
@@ -355,11 +355,11 @@ void imu_rest_cmd_task(void)
         {
 
             HAL_UART_Transmit_DMA(&huart2, (uint8_t *)imu_rest_tx_data, sizeof(imu_rest_tx_data));
-            
+
             imu_reseted_sent = 0;
             imu_reseted = 0;
         }
-        
+
         bl_uart_tx_done = 0;
     }
 }
@@ -394,11 +394,13 @@ void main_task_adc_first(void)
 
             // 开启ADC
             // HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_dma_buffer, ADC_BUFFER_SIZE); // != HAL_OK;
-
+            // HAL_Delay(1);
             delay_us(3);
             // adc_busy = 1;
             // while (adc_busy)
             //      ;
+
+            // HAL_GPIO_WritePin(HC4067_EN_GPIO_Port, HC4067_EN_Pin, GPIO_PIN_SET);
 
             point_nmb = input_idx * ADC_CHANNEL_NUMBER + adc_idx;
             adc_data_handler_with_idx(point_nmb);
