@@ -14,6 +14,7 @@ volatile uint16_t adc_ch = 0;
 
 volatile uint8_t check_reset_imu = 0;
 volatile uint8_t bl_uart_tx_done = 0;
+volatile uint8_t need_send_reset_signal = 0;
 
 __IO uint8_t bat_adc_done = 0;
 __IO static uint32_t fac_us = 0;
@@ -163,6 +164,13 @@ static void change_adc_ch(void)
 
 void uart_send(void)
 {
+    HAL_StatusTypeDef status = HAL_OK;
+    // // 先发送复位信号
+    if (need_send_reset_signal)
+    {
+        status = HAL_UART_Transmit(&huart1, (uint8_t *)imu_rest_tx_data, 5, 0xffff);
+        need_send_reset_signal = 0;
+    }
     // static uint8_t counter = 0;
     // counter++;
     // points_data[0] = counter; // 更新帧头
@@ -180,7 +188,7 @@ void uart_send(void)
     // 将数据复制到bl的传输数组中
     memcpy(bl_tx_buf, (const void *)tx_data, OLD_FRAME_LEN);
 
-    HAL_StatusTypeDef status = HAL_UART_Transmit_DMA(&huart1, (uint8_t *)tx_data, OLD_FRAME_LEN);
+    status = HAL_UART_Transmit_DMA(&huart1, (uint8_t *)tx_data, OLD_FRAME_LEN);
 
     uart_busy = 1;
 }
@@ -342,8 +350,9 @@ void imu_rest_cmd_task(void)
         if (imu_reseted && imu_reseted_sent == 0)
         {
 
-            // HAL_UART_Transmit_DMA(&huart1, (uint8_t *)imu_rest_tx_data, 5);
-            HAL_UART_Transmit(&huart1, (uint8_t *)imu_rest_tx_data, 5, 50);
+            // HAL_UART_Transmit_DMA(&huart1, (uint8_t *)imu_rest_tx_data, 0xffff);
+            need_send_reset_signal = 1;
+            // HAL_UART_Transmit(&huart1, (uint8_t *)imu_rest_tx_data, 5, 0xffff);
 
             imu_reseted_sent = 1;
         }
@@ -357,7 +366,7 @@ void imu_rest_cmd_task(void)
         {
 
             // HAL_UART_Transmit_DMA(&huart2, (uint8_t *)imu_rest_tx_data, 5);
-            HAL_UART_Transmit(&huart2, (uint8_t *)imu_rest_tx_data, 5, 50);
+            HAL_UART_Transmit(&huart2, (uint8_t *)imu_rest_tx_data, 5, 0xffff);
 
             imu_reseted_sent = 0;
             imu_reseted = 0;
@@ -398,7 +407,7 @@ void main_task_adc_first(void)
             // 开启ADC
             // HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_dma_buffer, ADC_BUFFER_SIZE); // != HAL_OK;
             // HAL_Delay(1);
-            delay_us(3);
+            delay_us(10);
             // adc_busy = 1;
             // while (adc_busy)
             //      ;

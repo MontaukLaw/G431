@@ -17,12 +17,13 @@ void key_task_test(void)
     }
 }
 
+static uint32_t key_down_counter = 0;
 // 10ms执行一次
 void key_task(void)
 {
     static uint32_t last_run_tck = 0;
     uint32_t now = HAL_GetTick();
-    static uint16_t key_down_counter = 0;
+
 
     // 调节帧率
     if (now - last_run_tck < 10)
