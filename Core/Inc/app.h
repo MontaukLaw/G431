@@ -32,5 +32,5 @@ extern uint16_t bat_smooth_mvolts;
 
 extern __IO uint32_t tim7_counter;
 extern __IO uint8_t bat_adc_done;
-
+extern volatile uint8_t imu_rest_tx_data[];
 #endif 

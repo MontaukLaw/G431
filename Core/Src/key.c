@@ -42,26 +42,21 @@ void key_task(void)
             HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_SET);
             while (1)
             {
-
                 // 拉高PowerCtrl
                 HAL_GPIO_WritePin(POWER_CTRL_GPIO_Port, POWER_CTRL_Pin, GPIO_PIN_RESET);
                 // 等待关机`
             }
         }
-        // 大于50ms
-        else if (key_down_counter >= RESET_GQ_KEY_SHAKE_DELAY) // 1s
-        {
-            // key_down_counter = 0;
-
-            // 陀螺仪复位
-            icm42688_pipeline_reset();
-
-            imu_reseted = 1;
-            
-        }
     }
     else
     {
+        if (key_down_counter >= RESET_GQ_KEY_SHAKE_DELAY) // 1s
+        {
+            // key_down_counter = 0;
+            imu_reseted = 1;
+            // 陀螺仪复位
+            icm42688_pipeline_reset();
+        }
         key_down_counter = 0;
     }
 

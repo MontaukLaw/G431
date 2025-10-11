@@ -342,7 +342,9 @@ void imu_rest_cmd_task(void)
         if (imu_reseted && imu_reseted_sent == 0)
         {
 
-            HAL_UART_Transmit_DMA(&huart1, (uint8_t *)imu_rest_tx_data, sizeof(imu_rest_tx_data));
+            // HAL_UART_Transmit_DMA(&huart1, (uint8_t *)imu_rest_tx_data, 5);
+            HAL_UART_Transmit(&huart1, (uint8_t *)imu_rest_tx_data, 5, 50);
+
             imu_reseted_sent = 1;
         }
 
@@ -354,7 +356,8 @@ void imu_rest_cmd_task(void)
         if (imu_reseted && imu_reseted_sent)
         {
 
-            HAL_UART_Transmit_DMA(&huart2, (uint8_t *)imu_rest_tx_data, sizeof(imu_rest_tx_data));
+            // HAL_UART_Transmit_DMA(&huart2, (uint8_t *)imu_rest_tx_data, 5);
+            HAL_UART_Transmit(&huart2, (uint8_t *)imu_rest_tx_data, 5, 50);
 
             imu_reseted_sent = 0;
             imu_reseted = 0;
@@ -413,6 +416,8 @@ void main_task_adc_first(void)
 
     // 问答模式使用comm_handler
     uart_send();
+
+    // HAL_Delay(100);
 }
 
 void delay_init(void)

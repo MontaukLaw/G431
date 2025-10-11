@@ -101,10 +101,10 @@ int main(void)
     MX_IWDG_Init();
     /* USER CODE BEGIN 2 */
     // HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, GPIO_PIN_RESET); // Turn on blue LED
-    
+
     delay_init();
 
-    HAL_Delay(300);
+    // HAL_Delay(300);
     HAL_GPIO_WritePin(GPIOA, POWER_CTRL_Pin, GPIO_PIN_SET);
     // init_frame_tail();
 
