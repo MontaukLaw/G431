@@ -38,20 +38,47 @@ void power_led_control(void)
 
     last_change_tick = now;
 
-    if (bat_smooth_mvolts > 3750)
+    // if (bat_smooth_mvolts > 3750)
+    // {
+    //     // 绿灯常亮
+    //     all_led_off();
+    //     HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_RESET);
+    // }
+    // else if (bat_smooth_mvolts < 3700 && bat_smooth_mvolts > 3500)
+    // {
+    //     /// 关绿灯
+    //     all_led_off();
+    //     // 红灯常亮
+    //     HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_RESET);
+    // }
+    // else if (bat_smooth_mvolts <= 3500)
+    // {
+
+    //     all_led_off();
+    //     // 低电量, 红灯闪烁
+    //     red_blink();
+    // }
+
+    if (bat_smooth_mvolts > 3300)
     {
-        // 绿灯常亮
+        // 蓝色灯常亮
         all_led_off();
+        HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, GPIO_PIN_RESET);
+    }
+    else if (bat_smooth_mvolts < 3250 && bat_smooth_mvolts > 3100)
+    {
+        all_led_off();
+        // 绿灯常亮
         HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_RESET);
     }
-    else if (bat_smooth_mvolts < 3700 && bat_smooth_mvolts > 3500)
+    else if (bat_smooth_mvolts < 3050 && bat_smooth_mvolts > 3000)
     {
         /// 关绿灯
         all_led_off();
         // 红灯常亮
         HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_RESET);
     }
-    else if (bat_smooth_mvolts <= 3500)
+    else if (bat_smooth_mvolts <= 3000)
     {
 
         all_led_off();
@@ -172,6 +199,7 @@ void led_task(void)
         // HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, GPIO_PIN_SET); // Turn off blue LED
         // HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_SET);
         // HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_SET);
+
         all_led_off();
         // 仅仅亮红灯
         HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_RESET);
