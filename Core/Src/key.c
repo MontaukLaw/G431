@@ -24,7 +24,6 @@ void key_task(void)
     static uint32_t last_run_tck = 0;
     uint32_t now = HAL_GetTick();
 
-
     // 调节帧率
     if (now - last_run_tck < 10)
         return;
@@ -43,6 +42,10 @@ void key_task(void)
             HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_SET);
             while (1)
             {
+
+                // 喂狗
+                HAL_IWDG_Refresh(&hiwdg);
+
                 // 拉高PowerCtrl
                 HAL_GPIO_WritePin(POWER_CTRL_GPIO_Port, POWER_CTRL_Pin, GPIO_PIN_RESET);
                 // 等待关机`

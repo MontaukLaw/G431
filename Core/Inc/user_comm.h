@@ -14,6 +14,7 @@
 #include "stm32g431xx.h"
 #include "comm.h"
 #include "app.h"
+#include "iwdg.h"
 #include <stdint.h>
 #include <math.h>
 #include <string.h>
@@ -41,7 +42,7 @@ typedef struct
 
 #define RESET_GQ_KEY_SHAKE_DELAY 5
 // 6秒关灯
-#define PWOER_DOWN_COUNTER 100 // 600
+#define PWOER_DOWN_COUNTER 350 // 600
 
 #define ICM42688DelayMs(_nms) HAL_Delay(_nms)
 
