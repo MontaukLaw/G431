@@ -91,7 +91,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
     }
 }
 
-void adc_data_handler_with_idx(uint8_t point_nmb)
+// 数据选择过程需要优化
+void adc_data_handler_with_idx_(uint8_t point_nmb)
 {
     // 简单计算平均值
     uint32_t adc_sum = 0;
@@ -103,6 +104,21 @@ void adc_data_handler_with_idx(uint8_t point_nmb)
     }
     // tx_buf[0] = adc_sum / ADC_BUFFER_SIZE; // 计算平均值
     float result = adc_sum / 4;      // / (ADC_BUFFER_SIZE - 0);
+    points_data[point_nmb] = result; // 将结果存储到points_data中
+    
+}
+
+void adc_data_handler_with_idx(uint8_t point_nmb)
+{
+    // 简单计算平均值
+    uint32_t adc_sum = 0;
+    uint32_t i = 0;
+
+    for (i = 0; i < ADC_BUFFER_SIZE; i++)
+    {
+        adc_sum += adc_dma_buffer[i];
+    }
+    float result = adc_sum / (ADC_BUFFER_SIZE - 0);
     points_data[point_nmb] = result; // 将结果存储到points_data中
 }
 

@@ -1,1 +1,4 @@
+1017
+修改了adc_data_handler_with_idx的逻辑, 目的提升最终的ADC值
+
 G431 1616阵列
