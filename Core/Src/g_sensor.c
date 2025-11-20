@@ -14,7 +14,7 @@ void gsensor_task(void)
     uint32_t now = HAL_GetTick();
 
     // 调节帧率
-    if (now - last_run_tck < 10)
+    if (now - last_run_tck < 2)
         return;
 
     icm42688_read_accel(&acc);
@@ -25,8 +25,10 @@ void gsensor_task(void)
 
     float dt = (now - last_run_tck) * 0.001f; // s
 
+    printf("dt = %.4f\r\n", dt);
+
     // icm42688_pipeline_update(&acc, &gyro, dt, q_out);
-    icm42688_pipeline_update(&acc_mapped, &gyro_mapped, dt, q_out);
+    icm42688_pipeline_update(&acc_mapped, &gyro_mapped, dt);
 
     // char tx_buf[96];
     // int n = snprintf(tx_buf, sizeof(tx_buf),
@@ -38,4 +40,5 @@ void gsensor_task(void)
     // }
 
     last_run_tck = now;
+
 }

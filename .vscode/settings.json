@@ -28,6 +28,9 @@
         "usart.h": "c",
         "i2c.h": "c",
         "gpio.h": "c",
-        "iwdg.h": "c"
+        "iwdg.h": "c",
+        "type_traits": "c",
+        "stdio.h": "c",
+        "qmi8658_app.h": "c"
     }
 }

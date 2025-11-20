@@ -25,6 +25,7 @@ volatile uint8_t tx_buf[TX_BUF_LEN] = {0}; // 发送缓冲区
 
 uint8_t mems_data[16] = {0xF1, 0xFF, 0x7F, 0x3F, 0xE0, 0xB6, 0x2F, 0x3A,
                          0xF0, 0xF0, 0x08, 0xBA, 0x88, 0x7C, 0x84, 0xBA};
+
 // F1 FF 7F 3F E0 B6 2F 3A F0 F0 08 BA 88 7C 84 BA
 void fill_tx_data(void)
 {
@@ -56,8 +57,6 @@ uint8_t adc_cn_arr[16] = {0, 1, 2, 3,
                           4, 5, 6, 7,
                           12, 13, 14, 15};
 
-// 陀螺仪4元数
-extern float q_out[];
 extern uint8_t bl_tx_buf[];
 
 /*{15, 1, 2, 3,
@@ -105,7 +104,6 @@ void adc_data_handler_with_idx_(uint8_t point_nmb)
     // tx_buf[0] = adc_sum / ADC_BUFFER_SIZE; // 计算平均值
     float result = adc_sum / 4;      // / (ADC_BUFFER_SIZE - 0);
     points_data[point_nmb] = result; // 将结果存储到points_data中
-    
 }
 
 void adc_data_handler_with_idx(uint8_t point_nmb)
@@ -176,6 +174,24 @@ static void change_adc_ch(void)
     // }
 
     time_to_change_adc_ch = 0;
+}
+
+void uart_send_100hz(void)
+{
+    static uint32_t last = 0;
+    uint32_t now = HAL_GetTick();
+    if (now - last < 10)
+    {
+        return;
+    }
+
+    uart_send();
+    // while (uart_busy)
+    // {
+    //     HAL_IWDG_Refresh(&hiwdg);
+    //     delay_us(100);
+    // };
+    last = now;
 }
 
 void uart_send(void)
@@ -270,7 +286,6 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
     if (huart->Instance == USART1)
     {
         uart_busy = 0; // UART发送完成
-
         check_reset_imu = 1;
     }
     else if (huart->Instance == USART2)
@@ -472,6 +487,15 @@ void delay_us(uint32_t nus)
                 break; // 时间超过/等于要延迟的时间,则退出.
         }
     };
+}
+
+void delay_ms(uint16_t nms)
+{
+    while (nms--)
+    {
+        HAL_IWDG_Refresh(&hiwdg);
+        delay_us(1000);
+    }
 }
 
 // tim7 callback

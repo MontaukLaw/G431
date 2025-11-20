@@ -29,6 +29,8 @@
 #include "g.sensor.h"
 #include "key.h"
 #include "charge_state.h"
+#include "qmi8658_app.h"
+#include "imu.h"
 
 typedef struct
 {
@@ -85,5 +87,10 @@ typedef struct
 #define CMD_RESULT_FAIL 0x01
 
 #define ADC2_DMA_BUF_LEN 100
+
+#define QMI8658 1
+#define ICM42688 2
+
+#define MEMS_USING QMI8658
 
 #endif

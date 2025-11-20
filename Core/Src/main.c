@@ -120,8 +120,12 @@ int main(void)
 
     // ICM42688DelayMs(2);
     // bsp_Icm42688Init();
-    icm42688_init();
-    // init_42688();
+
+#if MEMS_USING == ICM42688
+    // icm42688_init();
+#elif MEMS_USING == QMI8658
+    atk_qmi8658_init();
+#endif
 
     // icm42688_reset_quat_identity();
     // float g_q[4] = {1.0f, 0.0f, 0.0f, 0.0f}; // 初始四元数
@@ -138,6 +142,26 @@ int main(void)
     uint8_t tx_buf[100];
 
     start_adc_collecting();
+
+    // printf("System Initialized\r\n");
+
+    // printf("g_imu.ssvt_a = %d\r\n", g_imu.ssvt_a);
+    // printf("g_imu.ssvt_g = %d\r\n", g_imu.ssvt_g);
+
+    while (1)
+    {
+
+        // qmi8658_task();
+
+        qmi8658_task_5ms();
+
+        HAL_IWDG_Refresh(&hiwdg);
+
+        uart_send_100hz();
+   
+        // main_task_adc_first();
+        // printf("Watchdog refreshed\r\n");
+    }
 
     /* USER CODE END 2 */
 
@@ -156,8 +180,11 @@ int main(void)
 
         key_task();
 
+#if MEMS_USING == ICM42688
         gsensor_task();
-
+#elif MEMS_USING == QMI8658
+        qmi8658_task();
+#endif
         main_task_adc_first();
 
         bl_task();
